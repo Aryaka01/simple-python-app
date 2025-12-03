@@ -98,7 +98,5 @@ def main():
     print(f"Maximum: {ListUtils.find_max(numbers)}")
     print(f"Average: {ListUtils.calculate_average(numbers):.2f}")
 
-
-
 if __name__ == "__main__":
     main()
