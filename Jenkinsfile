@@ -11,20 +11,21 @@ pipeline {
             steps {
                 echo 'Checking out source code...'
                 checkout scm
-                bat 'dir'
+                sh 'ls -la'
             }
         }
         
         stage('Setup Environment') {
             steps {
                 echo 'Setting up Python virtual environment...'
-                bat '''
-                    python --version
-                    python -m pip --version
-                    python -m venv %VENV_NAME%
-                    %VENV_NAME%\\Scripts\\activate.bat && pip install --upgrade pip setuptools wheel
-                    %VENV_NAME%\\Scripts\\activate.bat && pip install -r requirements-dev.txt
-                    %VENV_NAME%\\Scripts\\activate.bat && pip install -e .
+                sh '''
+                    python3 --version
+                    python3 -m pip --version
+                    python3 -m venv ${VENV_NAME}
+                    . ${VENV_NAME}/bin/activate
+                    pip install --upgrade pip setuptools wheel
+                    pip install -r requirements-dev.txt
+                    pip install -e .
                 '''
             }
         }
@@ -32,13 +33,15 @@ pipeline {
         stage('Code Quality - Lint') {
             steps {
                 echo 'Running code quality checks...'
-                bat '''
-                    %VENV_NAME%\\Scripts\\activate.bat && flake8 src tests --format=junit-xml --output-file=flake8-report.xml || echo "Linting completed with issues"
-                    %VENV_NAME%\\Scripts\\activate.bat && flake8 src tests
+                sh '''
+                    . ${VENV_NAME}/bin/activate
+                    flake8 src tests --format=junit-xml --output-file=flake8-report.xml || true
+                    flake8 src tests
                 '''
             }
             post {
                 always {
+                    // Archive lint results if available
                     archiveArtifacts artifacts: 'flake8-report.xml', allowEmptyArchive: true
                 }
             }
@@ -47,8 +50,9 @@ pipeline {
         stage('Code Quality - Format Check') {
             steps {
                 echo 'Checking code formatting...'
-                bat '''
-                    %VENV_NAME%\\Scripts\\activate.bat && black --check --diff src tests
+                sh '''
+                    . ${VENV_NAME}/bin/activate
+                    black --check --diff src tests
                 '''
             }
         }
@@ -56,13 +60,17 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running unit tests...'
-                bat '''
-                    %VENV_NAME%\\Scripts\\activate.bat && pytest --junitxml=pytest-report.xml --cov=myapp --cov-report=xml --cov-report=html --cov-report=term-missing
+                sh '''
+                    . ${VENV_NAME}/bin/activate
+                    pytest --junitxml=pytest-report.xml --cov=myapp --cov-report=xml --cov-report=html --cov-report=term-missing
                 '''
             }
             post {
                 always {
+                    // Publish test results
                     junit 'pytest-report.xml'
+                    
+                    // Publish coverage reports
                     publishHTML([
                         allowMissing: false,
                         alwaysLinkToLastBuild: true,
@@ -71,6 +79,8 @@ pipeline {
                         reportFiles: 'index.html',
                         reportName: 'Coverage Report'
                     ])
+                    
+                    // Archive coverage XML for other tools
                     archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true
                 }
             }
@@ -79,12 +89,22 @@ pipeline {
         stage('Integration Test') {
             steps {
                 echo 'Running integration tests...'
-                bat '''
-                    %VENV_NAME%\\Scripts\\activate.bat && python -m myapp.cli calc add 5 3
-                    %VENV_NAME%\\Scripts\\activate.bat && python -m myapp.cli calc multiply 4 7
-                    %VENV_NAME%\\Scripts\\activate.bat && python -m myapp.cli greet --name "Jenkins"
-                    %VENV_NAME%\\Scripts\\activate.bat && python -m myapp.cli greet --name "Pipeline" --time
-                    %VENV_NAME%\\Scripts\\activate.bat && python -m myapp.app
+                sh '''
+                    . ${VENV_NAME}/bin/activate
+                    
+                    # Test CLI commands
+                    echo "Testing CLI calculator..."
+                    python -m myapp.cli calc add 5 3
+                    python -m myapp.cli calc multiply 4 7
+                    
+                    echo "Testing CLI greetings..."
+                    python -m myapp.cli greet --name "Jenkins"
+                    python -m myapp.cli greet --name "Pipeline" --time
+                    
+                    # Test main application
+                    echo "Testing main application..."
+                    python -m myapp.app
+                    
                     echo "All integration tests passed!"
                 '''
             }
@@ -93,9 +113,10 @@ pipeline {
         stage('Package') {
             steps {
                 echo 'Building distribution packages...'
-                bat '''
-                    %VENV_NAME%\\Scripts\\activate.bat && python setup.py sdist bdist_wheel
-                    dir dist\\
+                sh '''
+                    . ${VENV_NAME}/bin/activate
+                    python setup.py sdist bdist_wheel
+                    ls -la dist/
                 '''
             }
         }
@@ -113,11 +134,13 @@ pipeline {
     post {
         always {
             echo 'Pipeline execution completed.'
-            bat '''
-                if exist "%VENV_NAME%" (
-                    rmdir /s /q "%VENV_NAME%"
+            
+            // Clean up virtual environment
+            sh '''
+                if [ -d "${VENV_NAME}" ]; then
+                    rm -rf ${VENV_NAME}
                     echo "Cleaned up virtual environment"
-                )
+                fi
             '''
         }
         success {
