@@ -4,11 +4,11 @@ Command Line Interface for the Simple Python App
 import argparse
 import sys
 from .app import Calculator, GreetingService
-
-
 def create_parser():
     """Create command line argument parser."""
-    parser = argparse.ArgumentParser(description="Simple Python App CLI")
+    parser = argparse.ArgumentParser(
+                                    description="Simple Python App CLI"
+    )
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     # Calculator commands
     calc_parser = subparsers.add_parser('calc', help='Calculator operations')
@@ -20,8 +20,6 @@ def create_parser():
     greet_parser.add_argument('--name', default='World', help='Name to greet')
     greet_parser.add_argument('--time', action='store_true', help='Show current time')
     return parser
-
-
 def main():
     """Main CLI entry point."""
     parser = create_parser()
@@ -48,7 +46,5 @@ def main():
             print(f"Current time: {service.get_current_time()}")
     else:
         parser.print_help()
-
-
 if __name__ == "__main__":
     main()
