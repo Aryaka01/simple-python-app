@@ -58,33 +58,26 @@ pipeline {
         }
         
         stage('Test') {
-            steps {
-                echo 'Running unit tests...'
-                sh '''
-                    . ${VENV_NAME}/bin/activate
-                    pytest --junitxml=pytest-report.xml --cov=myapp --cov-report=xml --cov-report=html --cov-report=term-missing
-                '''
-            }
-            post {
-                always {
-                    // Publish test results
-                    junit 'pytest-report.xml'
-                    
-                    // Publish coverage reports
-                    publishHTML([
-                        allowMissing: false,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'htmlcov',
-                        reportFiles: 'index.html',
-                        reportName: 'Coverage Report'
-                    ])
-                    
-                    // Archive coverage XML for other tools
-                    archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true
-                }
-            }
+    steps {
+        echo 'Running unit tests...'
+        sh '''
+            . ${VENV_NAME}/bin/activate
+            pytest --junitxml=pytest-report.xml --cov=myapp --cov-report=xml --cov-report=html --cov-report=term-missing
+        '''
+    }
+    post {
+        always {
+            // Publish test results
+            junit 'pytest-report.xml'
+
+            // REMOVE publishHTML because plugin not installed
+
+            // Archive coverage XML for other tools
+            archiveArtifacts artifacts: 'coverage.xml', allowEmptyArchive: true
         }
+    }
+}
+
         
         stage('Integration Test') {
             steps {
