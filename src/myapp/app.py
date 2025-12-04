@@ -1,4 +1,4 @@
-"""
+==========="""
 Simple Python Application for Jenkins Pipeline Demo
 """
 
@@ -70,6 +70,7 @@ class ListUtils:
         if not numbers:
             raise ValueError("List cannot be empty")
         return sum(numbers) / len(numbers)
+
 
 
 def main():
