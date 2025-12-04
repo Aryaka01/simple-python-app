@@ -72,6 +72,7 @@ class ListUtils:
         return sum(numbers) / len(numbers)
 
 
+
 def main():
     """Main function to demonstrate the application."""
 
