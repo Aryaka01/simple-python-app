@@ -2,10 +2,8 @@
 Simple Python Application for Jenkins Pipeline Demo
 """
 
-
 import datetime
 from typing import List, Union
-
 
 class Calculator:
     """A simple calculator class with basic operations."""
@@ -28,7 +26,6 @@ class Calculator:
             raise ValueError("Cannot divide by zero")
         return a / b
 
-
 class GreetingService:
     """A service for generating greetings."""
     def __init__(self, name: str = "World"):
@@ -47,7 +44,6 @@ class GreetingService:
         if date is None:
             date = datetime.date.today()
         return date.weekday() >= 5  # Saturday=5, Sunday=6
-
 
 class ListUtils:
     """Utility functions for list operations."""
@@ -70,7 +66,6 @@ class ListUtils:
         if not numbers:
             raise ValueError("List cannot be empty")
         return sum(numbers) / len(numbers)
-
 
 
 def main():
