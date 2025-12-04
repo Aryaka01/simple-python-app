@@ -1,4 +1,4 @@
-==========="""
+"""
 Simple Python Application for Jenkins Pipeline Demo
 """
 
