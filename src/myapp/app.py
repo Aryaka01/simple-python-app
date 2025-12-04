@@ -67,7 +67,6 @@ class ListUtils:
             raise ValueError("List cannot be empty")
         return sum(numbers) / len(numbers)
 
-
 def main():
     """Main function to demonstrate the application."""
 
